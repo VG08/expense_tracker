@@ -1,12 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-class TransactionForm extends StatelessWidget {
-  final titleController = TextEditingController();
-  final amountController = TextEditingController();
+class TransactionForm extends StatefulWidget {
   Function onAddTransaction;
-  var amountFocusNode = FocusNode();
+
   TransactionForm(this.onAddTransaction);
+
+  @override
+  State<TransactionForm> createState() => _TransactionFormState();
+}
+
+class _TransactionFormState extends State<TransactionForm> {
+  final titleController = TextEditingController();
+
+  final amountController = TextEditingController();
+
+  var amountFocusNode = FocusNode();
 
   @override
   Widget build(BuildContext context) {
@@ -30,12 +39,14 @@ class TransactionForm extends StatelessWidget {
                 keyboardType: TextInputType.number,
                 focusNode: amountFocusNode,
                 onSubmitted: (_) {
-                  onAddTransaction(titleController.text, amountController.text);
+                  widget.onAddTransaction(
+                      titleController.text, amountController.text);
                 },
               ),
               FlatButton(
                 onPressed: () {
-                  onAddTransaction(titleController.text, amountController.text);
+                  widget.onAddTransaction(
+                      titleController.text, amountController.text);
                 },
                 child: const Text(
                   "Add transaction",

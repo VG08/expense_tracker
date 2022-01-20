@@ -44,9 +44,11 @@ class _HomeState extends State<Home> {
   ];
 
   void onAddTransaction(String titleInput, String amountInput) {
+    print(amountInput);
     double amount = double.parse(amountInput);
 
-    if (titleInput.isEmpty || amount > 0) {
+    if (titleInput.isEmpty || amount < 0) {
+      print("here");
       return;
     }
     setState(() {
@@ -67,7 +69,11 @@ class _HomeState extends State<Home> {
       appBar: AppBar(
         backgroundColor: Colors.black54,
         title: const Text('Expense Tracker'),
-        actions: [IconButton(onPressed: () {}, icon: Icon(Icons.add))],
+        actions: [
+          IconButton(
+              onPressed: () => openAddTransactionForm(context),
+              icon: Icon(Icons.add))
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -75,13 +81,12 @@ class _HomeState extends State<Home> {
           children: [
             Chart(),
             TransactionList(transactions),
+            TransactionForm(onAddTransaction)
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          openAddTransactionForm(context);
-        },
+        onPressed: () => openAddTransactionForm(context),
         child: Icon(Icons.add),
       ),
     );
