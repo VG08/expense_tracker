@@ -2,8 +2,10 @@
 
 //package imports
 
+import 'package:expense_tracker/boxes.dart';
 import 'package:expense_tracker/widgets/transaction_form.dart';
 import 'package:expense_tracker/widgets/transaction_list.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 //local file imoprts
 import 'widgets/chart.dart';
@@ -11,10 +13,12 @@ import 'models/transaction.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  Hive.initFlutter();
+  await Hive.initFlutter();
+  Hive.registerAdapter(TransactionAdapter());
+  await Hive.openBox<Transaction>("transactions");
 
   runApp(MyApp());
 }
@@ -44,6 +48,13 @@ class _HomeState extends State<Home> {
         .toList();
   }
 
+  @override
+  void dispose() {
+    Hive.close();
+
+    super.dispose();
+  }
+
   final titleFocusNode = FocusNode();
 
   void openAddTransactionForm(BuildContext ctx) {
@@ -65,14 +76,13 @@ class _HomeState extends State<Home> {
       return;
     }
     setState(() {
-      transactions.add(
-        Transaction(
-          transactions.length + 1,
-          titleInput,
-          amount,
-          date,
-        ),
-      );
+      final box = Boxes.getTransactions();
+      box.add(Transaction(
+        transactions.length + 1,
+        titleInput,
+        amount,
+        date,
+      ));
     });
   }
 
@@ -126,7 +136,13 @@ class _HomeState extends State<Home> {
                     ),
                   ],
                 )
-              : TransactionList(transactions, onDeleteTransaction)
+              : ValueListenableBuilder<Box<Transaction>>(
+                  valueListenable: Boxes.getTransactions().listenable(),
+                  builder: (content, box, _) {
+                    final transactions = box.values.toList().cast();
+                    return TransactionList(
+                        transactions as List<Transaction>, onDeleteTransaction);
+                  })
         ],
       ),
       floatingActionButton: FloatingActionButton(
