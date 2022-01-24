@@ -8,13 +8,22 @@ import 'package:flutter/material.dart';
 //local file imoprts
 import 'widgets/chart.dart';
 import 'models/transaction.dart';
+import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
-void main() => runApp(MyApp());
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  Hive.initFlutter();
+
+  runApp(MyApp());
+}
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      theme: ThemeData(primarySwatch: Colors.green, fontFamily: "QuickSand"),
       //theme: ThemeData(primaryColor: Colors.blue, brightness: Brightness.dark),
       title: 'Flutter App',
       home: Home(),
@@ -28,6 +37,13 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  List<Transaction> get recentTransactions {
+    return transactions
+        .where((transaction) => transaction.date
+            .isAfter(DateTime.now().subtract(Duration(days: 7))))
+        .toList();
+  }
+
   final titleFocusNode = FocusNode();
 
   void openAddTransactionForm(BuildContext ctx) {
@@ -38,17 +54,14 @@ class _HomeState extends State<Home> {
         });
   }
 
-  final List<Transaction> transactions = [
-    Transaction(1, "Shoes", 1650, DateTime.now()),
-    Transaction(2, "Mug", 785, DateTime.now()),
-  ];
+  final List<Transaction> transactions = [];
 
-  void onAddTransaction(String titleInput, String amountInput) {
-    print(amountInput);
+  void onAddTransaction(String titleInput, String amountInput, DateTime date) {
+    //print(amountInput);
     double amount = double.parse(amountInput);
 
     if (titleInput.isEmpty || amount < 0) {
-      print("here");
+      //print("here");
       return;
     }
     setState(() {
@@ -57,33 +70,64 @@ class _HomeState extends State<Home> {
           transactions.length + 1,
           titleInput,
           amount,
-          DateTime.now(),
+          date,
         ),
       );
     });
   }
 
+  void onDeleteTransaction(int index) {
+    setState(() {
+      transactions.removeAt(index);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final double _height = MediaQuery.of(context).size.height;
+    final double _width = MediaQuery.of(context).size.width;
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.black54,
         title: const Text('Expense Tracker'),
         actions: [
           IconButton(
               onPressed: () => openAddTransactionForm(context),
-              icon: Icon(Icons.add))
+              icon: Icon(Icons.settings))
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Chart(),
-            TransactionList(transactions),
-            TransactionForm(onAddTransaction)
-          ],
-        ),
+      body: Column(
+        //crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          Align(
+            child: Chart(recentTransactions),
+            alignment: Alignment.bottomCenter,
+          ),
+          (transactions.isEmpty) // ternary expression
+              ? Column(
+                  children: [
+                    SizedBox(
+                      height: 0.1 * _height,
+                    ),
+                    Image.asset(
+                      "assets/images/waiting.png",
+                      width: 0.2 * _width,
+                    ),
+                    SizedBox(
+                      height: 0.01 * _height,
+                    ),
+                    Text(
+                      "No transactions registered yet",
+                      style: TextStyle(
+                        fontSize: 19.13,
+                        fontFamily: "QuickSand",
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                )
+              : TransactionList(transactions, onDeleteTransaction)
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => openAddTransactionForm(context),

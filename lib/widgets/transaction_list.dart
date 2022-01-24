@@ -4,10 +4,13 @@ import 'package:intl/intl.dart';
 
 class TransactionList extends StatelessWidget {
   final List<Transaction> transactions;
-  TransactionList(this.transactions);
+  final Function onDeleteTransaction;
+  TransactionList(this.transactions, this.onDeleteTransaction);
 
   @override
   Widget build(BuildContext context) {
+    final double _height = MediaQuery.of(context).size.height;
+    final double _width = MediaQuery.of(context).size.width;
     return SizedBox(
       height: MediaQuery.of(context).size.height * 50 / 100,
       child: ListView.builder(
@@ -20,13 +23,14 @@ class TransactionList extends StatelessWidget {
                   margin:
                       const EdgeInsets.symmetric(vertical: 7, horizontal: 15),
                   decoration: BoxDecoration(
-                      border: Border.all(color: Colors.purple, width: 2)),
+                      border: Border.all(
+                          color: Theme.of(context).primaryColorDark, width: 2)),
                   child: Text(
                     "Rs ${transactions[index].amount.toStringAsFixed(0)}",
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Colors.purple,
+                      color: Theme.of(context).primaryColorDark,
                     ),
                   ),
                 ),
@@ -47,6 +51,17 @@ class TransactionList extends StatelessWidget {
                         )),
                   ],
                 ),
+                Padding(
+                    padding: const EdgeInsets.only(left: 30),
+                    child: SizedBox(
+                      width: 50,
+                      child: IconButton(
+                          color: Colors.red,
+                          icon: Icon(
+                            Icons.delete,
+                          ),
+                          onPressed: () => onDeleteTransaction(index)),
+                    )),
               ],
             ),
           );
